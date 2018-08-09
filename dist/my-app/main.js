@@ -957,7 +957,8 @@ var AppComponent = /** @class */ (function () {
                 var anot = document.createElement("img");
                 var container = document.createElement("div");
                 anot.setAttribute("class", "annotateme");
-                anot.setAttribute("src", document.location.origin + "/" + pageNum + "/" + image.getAttribute("xlink:href"));
+                var imgSrc = document.location.origin + "/integrate-annototor-js-imgselect-plugin-in-our-pdf-html-viewer-angular-4/dist/my-app/" + pageNum + "/" + image.getAttribute("xlink:href");
+                anot.setAttribute("src", imgSrc );
                 container.setAttribute("style", "position:absolute; width: " + coords.width + "px; height: " +
                     coords.height + "px; top: " + coords.y + "px; left:" +
                     coords.x + "px; background:black; z-index: 10001;");
