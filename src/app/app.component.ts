@@ -1,5 +1,9 @@
 import { Component, OnInit } from "@angular/core";
-// import { $ } from "../../node_modules/protractor";
+
+declare var IDRViewer: any;
+declare var $: any;
+declare var annotator: any;
+declare var annotatorImageSelect: any;
 
 @Component({
   selector: "app-root",
@@ -12,8 +16,9 @@ export class AppComponent {
   constructor() { }
 
   init() {
+
     // console.log("init...");
-    var Button = {},
+    var Button = <any>{},
       pgCount,
       curPg;
     // * Shorthand helper function to getElementById
@@ -63,7 +68,7 @@ export class AppComponent {
 
     // Encapsulation of sidebar functionality
     var Sidebar = (function () {
-      var Sidebar = {},
+      var Sidebar = <any>{},
         loadedThumbsArray = [],
         lastScroll = 0,
         sidebar,
@@ -234,7 +239,7 @@ export class AppComponent {
         }, 500);
       };
 
-      var loadVisibleThumbnails = function (scrollTop) {
+      var loadVisibleThumbnails = function (scrollTop = null) {
         if (typeof scrollTop !== "undefined" && scrollTop != lastScroll) return;
 
         // load thumbs in view
@@ -325,7 +330,7 @@ export class AppComponent {
       Button.go.innerHTML = "";
       for (var i = 1; i <= pgCount; i++) {
         var opt = document.createElement("option");
-        opt.value = i;
+        opt.value = i.toString();
         opt.innerHTML = pageLabels.length ? pageLabels[i - 1] : String(i);
         Button.go.appendChild(opt);
       }
@@ -444,9 +449,14 @@ export class AppComponent {
       var resultDiv = document.getElementById("searchResults");
       resultDiv.innerHTML = "";
 
-      var searchTerm = d("searchInput").value;
-      var matchCase = d("cbMatchCase").checked;
-      var limitOnePerPage = d("cbLimitResults").checked;
+      var $searchInput: any = d("searchInput");
+      var searchTerm = $searchInput.value;
+
+      var $cbMatchCase: any = d("cbMatchCase");
+      var matchCase = $cbMatchCase.checked;
+
+      var $cbLimitResults: any = d("cbLimitResults");
+      var limitOnePerPage = $cbLimitResults.checked;
 
       var results = IDRViewer.search(searchTerm, matchCase, limitOnePerPage);
 
@@ -587,7 +597,7 @@ export class AppComponent {
         themeToggle = !themeToggle;
       });
 
-      var searchInput = d("searchInput");
+      var searchInput: any = d("searchInput");
       searchInput.value = "Loading";
       searchInput.disabled = "disabled";
       searchInput.oninput = doSearch;
@@ -929,35 +939,37 @@ export class AppComponent {
     IDRViewer.setup();
 
     // Make sure we don't initialize the annotator for the same page twice
-    var pageAnnotations = window.pageAnnotations = { pages: {} };
+    var pageAnnotations = {
+      pages: {},
+      states: {}
+    };
 
     var annotatePage = function (pageNum, event) {
 
-      if (!pageAnnotations.pages["page" + pageNum]) {
-        pageAnnotations.pages["page" + pageNum] = [];
-      } else {
-        return false;
+      var $pg = $("#pg" + pageNum);
+      var timer = 500;
+      console.warn("annotatePage...");
+
+      // CHECK IF PAGE IS READY (RESOURCES LOADED)
+      if (!pageAnnotations.states["page" + pageNum] && pageAnnotations.states["page" + pageNum] != "READY") {
+        console.log("Page #" + pageNum + " not in READY state.");
+        return setTimeout(function () {
+          annotatePage(pageNum, event);
+        }, timer);
       }
 
       console.log("Annotation initialized in page #" + pageNum, ' [Event]: ' + event);
 
-      // Handling loading of Annotations via LocalStorage
-      let storageKey = "page" + pageNum;
-      if (!localStorage.getItem(storageKey)) {
-        console.log(localStorage.getItem(storageKey));
-      }
-
       function handleCreatedAnnotations(options) {
         return {
           annotationCreated: function (annotation) {
-            console.log(annotation);
-            // console.log(annotator.storage.StorageAdapter);
+            // console.log(annotation);
             // Handling Storage of Annotations via LocalStorage
             let storageKey = "page" + pageNum;
             if (!localStorage.getItem(storageKey)) {
               localStorage.setItem(storageKey, JSON.stringify([annotation]))
             } else {
-              let prevStorage = localStorage.getItem(storageKey);
+              let prevStorage: any = localStorage.getItem(storageKey);
               prevStorage = JSON.parse(prevStorage);
               prevStorage.push(annotation);
               localStorage.setItem(storageKey, JSON.stringify(prevStorage));
@@ -968,23 +980,41 @@ export class AppComponent {
       }
 
       // Handle creation of annotation with extra img tag overlayed on top of original image
-      var $pg = $("#pg" + pageNum);
+      $("#page" + pageNum).css("position", "relative");
+      console.log("Object:", $pg.find("object").length);
       if ($pg.find("object").length > 0) {
         var obj = $pg.find("object")[0].contentDocument;
         var image = obj.querySelector("image");
+
+        if (obj.readyState != "complete") {
+
+          console.warn("Page #" + pageNum + " Object not in complete readystate. Reloading...");
+          return setTimeout(function () {
+            annotatePage(pageNum, event);
+          }, timer);
+
+        }
+
         if (!image) return false;
         console.log("Image(s) to be annotated found.");
+        if (!pageAnnotations.pages["page" + pageNum]) {
+          pageAnnotations.pages["page" + pageNum] = [];
+        } else {
+          return false;
+        }
         var coords = image.getBBox();
         var anot = document.createElement("img");
+        var container = document.createElement("div");
         anot.setAttribute("class", "annotateme");
         anot.setAttribute("src", document.location.origin + "/" + pageNum + "/" + image.getAttribute("xlink:href"));
-        anot.setAttribute(
+        container.setAttribute(
           "style",
           "position:absolute; width: " + coords.width + "px; height: " +
           coords.height + "px; top: " + coords.y + "px; left:" +
           coords.x + "px; background:black; z-index: 10001;"
         );
-        $pg.append(anot);
+        container.appendChild(anot);
+        $pg.append(container);
 
         var app = new annotator.App();
         app
@@ -997,10 +1027,14 @@ export class AppComponent {
 
     }
 
-    // IDRViewer.on('pageload', function (data) { annotatePage(data.page, 'pageload'); });
-    IDRViewer.on('pagechange', function (data) { annotatePage(data.page, 'pagechange'); });
+    IDRViewer.on('pageload', function (data) {
+      pageAnnotations.states["page" + data.page] = "READY";
+    });
+    IDRViewer.on('pagechange', function (data) {
+      annotatePage(data.page, 'pagechange');
+    });
     window.addEventListener("load", function () {
-      var page = document.location.search.split("=");
+      var page: any = document.location.search.split("=");
       if (page) {
         page = page[1];
         annotatePage(page, "window:load");
