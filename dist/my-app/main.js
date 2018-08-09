@@ -582,8 +582,7 @@ var AppComponent = /** @class */ (function () {
     // <script src="config.js">
     AppComponent.prototype.config = function () {
         IDRViewer.config = {
-            pagecount: 18,
-            // pagecount: 90,
+            pagecount: 90,
             title: "April 2017 NFIP Flood Insurance Manual, 07 Lowest Floor Guide section",
             author: "DHS/FEMA/NFIP",
             fileName: "07_lowest_floor_guide_508_oct2017_2.pdf",
