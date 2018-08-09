@@ -617,8 +617,8 @@ export class AppComponent {
   // <script src="config.js">
   config() {
     IDRViewer.config = {
-      pagecount: 18, // For debugging purposes...
-      // pagecount: 90,
+      // pagecount: 18, // For debugging purposes...
+      pagecount: 90,
       title:
         "April 2017 NFIP Flood Insurance Manual, 07 Lowest Floor Guide section",
       author: "DHS/FEMA/NFIP",

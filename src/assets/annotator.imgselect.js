@@ -103,10 +103,6 @@ function annotatorImageSelect(options) {
         return;
       }
 
-      console.log("imgselection: ", imgselection);
-      console.log("annotation: ", annotation);
-      console.log("img: ", img);
-
       // create a highlight element
       var hl = $(document.createElement('span'));
       hl.addClass('annotator-hl');
@@ -169,17 +165,13 @@ function annotatorImageSelect(options) {
       // storing all dimensions as percentages so it can
       // be scaled for different sizes if necessary
       var w = (selection.x2 - selection.x1) / img.width, h = (selection.y2 - selection.y1) / img.height;
-      console.log("selection.x2", selection.x2);
-      console.log("selection.x1", selection.x1);
-      console.log("selection.y2", selection.y2);
-      console.log("selection.y1", selection.y1);
-      console.log('$(img):', $(img));
-      console.log("img:", img);
       return {
         // full uri to the image
         uri: img.src,
         // store src as it appears in the document, so we can find it again
         src: $(img).attr('src'),
+
+        // OLD COORDS
         // x: percent(selection.x1 / img.width),
         // y: percent(selection.y1 / img.height),
         // w: percent(w),
