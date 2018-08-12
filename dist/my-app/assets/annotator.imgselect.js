@@ -187,8 +187,8 @@ function annotatorImageSelect(options) {
 
         x: selection.x1,
         y: selection.y1,
-        w: selection.x2,
-        h: selection.y2
+        w: selection.x2 - selection.x1,
+        h: selection.y2 - selection.y1
 
       };
     },
