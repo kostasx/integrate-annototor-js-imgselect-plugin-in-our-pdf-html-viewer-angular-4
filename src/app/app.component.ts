@@ -932,11 +932,25 @@ export class AppComponent {
     };
   }
 
+  getCurrentPage() {
+
+    var page: any = document.location.search.split("=");
+    if (page) {
+      page = page[1];
+      console.log("Current page: ", page);
+      return page;
+    } else {
+      return null;
+    }
+
+  }
+
   ngOnInit() {
     // console.log("ngOnInit...");
     this.init();
     this.config();
     IDRViewer.setup();
+    const getCurrentPage = this.getCurrentPage;
 
     // Make sure we don't initialize the annotator for the same page twice
     var pageAnnotations = {
@@ -963,11 +977,11 @@ export class AppComponent {
       function handleCreatedAnnotations(options) {
         return {
           annotationCreated: function (annotation) {
-            // console.log(annotation);
+            annotation.uuid = 'uuid' + (Date.now().toString(36) + Math.random().toString(36).substr(2, 9)).toUpperCase();
             // Handling Storage of Annotations via LocalStorage
             let storageKey = "page" + pageNum;
             if (!localStorage.getItem(storageKey)) {
-              localStorage.setItem(storageKey, JSON.stringify([annotation]))
+              localStorage.setItem(storageKey, JSON.stringify([annotation]));
             } else {
               let prevStorage: any = localStorage.getItem(storageKey);
               prevStorage = JSON.parse(prevStorage);
@@ -981,7 +995,7 @@ export class AppComponent {
 
       // Handle creation of annotation with extra img tag overlayed on top of original image
       $("#page" + pageNum).css("position", "relative");
-      console.log("Object:", $pg.find("object").length);
+      // console.log("Object:", $pg.find("object").length);
       if ($pg.find("object").length > 0) {
         var obj = $pg.find("object")[0].contentDocument;
         var image = obj.querySelector("image");
@@ -1034,10 +1048,9 @@ export class AppComponent {
       annotatePage(data.page, 'pagechange');
     });
     window.addEventListener("load", function () {
-      var page: any = document.location.search.split("=");
-      if (page) {
-        page = page[1];
-        annotatePage(page, "window:load");
+      var currPage = getCurrentPage();
+      if (currPage) {
+        annotatePage(currPage, "window:load");
       }
     });
 
